@@ -4,7 +4,8 @@ phases:
   pre_build:
     commands:
       - echo Logging in to DockerHub...
-      - docker login -u $dockerhub_username -p $dockerhub_password
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 796307765768.dkr.ecr.ap-south-1.amazonaws.com
+      - echo ecr uri is $ecr_uri
       - REPOSITORY_URI=$ecr_uri
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
@@ -24,6 +25,7 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
+      - echo ecs container name is $ecs_container_name
       - printf '[{"name":"'$ecs_container_name'","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 artifacts:
     files: imagedefinitions.json
